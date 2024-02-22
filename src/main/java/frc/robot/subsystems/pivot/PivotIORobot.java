@@ -10,11 +10,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.IOs.TalonPosIO;
 import frc.robot.utilities.Phoenix6Utility;
 
-
+//STATUS: Rotation2d methods implemented, not used in IO yet.
 /**
  * <h3>PivotIORobot</h3>
  * An IO to the real robot's pivot
@@ -49,14 +50,27 @@ public class PivotIORobot implements TalonPosIO{
     @Override
     public void runSim() {}
 
+    public Rotation2d getPosR2D() {
+        return Rotation2d.fromRotations(m_motor.getPosition().getValue());
+    }
+
     @Override
     public double getPos() {
         return Units.rotationsToDegrees(m_motor.getPosition().getValue()); 
     }
 
+    public Rotation2d getVelocityR2D() {
+        return Rotation2d.fromRotations(m_motor.getVelocity().getValue());
+    }
+
     @Override
     public double getVelocity() {
        return Units.rotationsToDegrees(m_motor.getVelocity().getValue());
+    }
+    
+    public void setTarget(Rotation2d rotation) {
+        Phoenix6Utility.applyConfigAndNoRetry(m_motor,
+            () -> m_motor.setControl(m_request.withPosition(rotation.getRotations()).withSlot(0)));
     }
 
     @Override
@@ -68,6 +82,10 @@ public class PivotIORobot implements TalonPosIO{
     @Override
     public double getVoltage() {
         return m_motor.getMotorVoltage().getValue();
+    }
+
+    public Rotation2d getTargetR2D() {
+        return Rotation2d.fromRotations(Phoenix6Utility.getPositionFromController(m_motor,0.0));
     }
 
     @Override

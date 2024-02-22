@@ -3,6 +3,10 @@ package frc.robot.subsystems.mm_turret;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -25,7 +29,8 @@ public class mmTurretSubsystem extends SubsystemBase{
     private static final double VIEW_CHANGE = 0.0;
     private static final double TURRET_MIN_POS = -160.0;//137.0
     private static final double TURRET_MAX_POS = 110.0;//115.0
-    public static final double TURRET_DEADBAND = 2.0;
+    public static final double TURRET_POS_DEADBAND = 2.0;
+    public static final double TURRET_VEL_DEADBAND = 2.0;
     private boolean m_isTurretLocked;
 
     /**
@@ -51,6 +56,10 @@ public class mmTurretSubsystem extends SubsystemBase{
         m_io.setTarget(clampedPosition);
     }
 
+    public void setPosition(Measure<Angle> angle) {
+        setPosition(angle.in(Units.Degrees));
+    }
+
     /**
      * <h3>getSetPoint</h3>
      * Gets the angle that the subsystem is currently trying to turn to
@@ -58,6 +67,10 @@ public class mmTurretSubsystem extends SubsystemBase{
      */
     public double getTarget() {
         return m_io.getTarget() - VIEW_CHANGE;
+    }
+
+    public Measure<Angle> getTargetMeasure() {
+        return Units.Degrees.of(m_io.getTarget());
     }
 
     /**
@@ -69,6 +82,10 @@ public class mmTurretSubsystem extends SubsystemBase{
         return m_io.getPos() - VIEW_CHANGE;
     }
 
+    public Measure<Angle> getPositionMeasure() {
+        return Units.Degrees.of(m_io.getPos());
+    }
+
     /**
      * <h3>getVelocity</h3>
      * Gets the velocity in degrees per second where 0 is the horizontal and positive is up.
@@ -78,6 +95,9 @@ public class mmTurretSubsystem extends SubsystemBase{
         return m_io.getVelocity();
     }
 
+    public Measure<Velocity<Angle>> getVelocityMeasure() {
+        return Units.DegreesPerSecond.of(m_io.getVelocity());
+    }
     /**
      * <h3>getVoltage</h3>
      * Gets the current voltage of the subystem.
@@ -102,9 +122,10 @@ public class mmTurretSubsystem extends SubsystemBase{
     }
 
     public boolean atSetpoint() {
+        double vel = getVelocity();
         double pos = getPosition();
         double target = getTarget();
-        return MathUtil.applyDeadband(target - pos, TURRET_DEADBAND) == 0.0;
+        return MathUtil.isNear(target, pos, TURRET_POS_DEADBAND) && MathUtil.isNear(0.0,vel,TURRET_VEL_DEADBAND);
     }
 
     public Command newWaitUntilSetpointCommand(double seconds) {

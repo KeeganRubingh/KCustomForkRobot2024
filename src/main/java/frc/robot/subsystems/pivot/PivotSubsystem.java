@@ -1,8 +1,19 @@
 package frc.robot.subsystems.pivot;
 
+import javax.management.ImmutableDescriptor;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.ExponentialProfile.Constraints;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.ImmutableMeasure;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Unit;
+import edu.wpi.first.units.UnitBuilder;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -21,7 +32,11 @@ public class PivotSubsystem extends SubsystemBase{
 
     private final String pivotName;
 
-    public static final double PIVOT_DEADBAND = 2.0;
+    public static final double PIVOT_POSITION_DEADBAND = 2.0;
+    public static final double PIVOT_VELOCITY_DEADBAND = 1.0;
+
+    private static final double PIVOT_MIN = 0;
+    private static final double PIVOT_MAX = 90;
 
     /**
      * <h3>PivotSubsystem</h3>
@@ -47,6 +62,13 @@ public class PivotSubsystem extends SubsystemBase{
     }
 
     /**
+     * <h1>!!DO NOT USE!!</h1>UNTESTED<p>NO DOCUMENTATION UNTIL TESTED
+     */
+    public void setTarget(Measure<Angle> angle) {
+        m_io.setTarget(MathUtil.clamp(angle.in(Units.Radians), PIVOT_MIN, PIVOT_MAX));
+    }
+
+    /**
      * <h3>getSetPoint</h3>
      * Gets the angle that the subsystem is currently trying to turn to
      * @param angle The angle in degrees from the horizontal
@@ -64,6 +86,10 @@ public class PivotSubsystem extends SubsystemBase{
         return m_io.getPos();
     }
 
+    public Measure<Angle> getAngleMeasure() {
+        return Units.Degrees.of(m_io.getPos());
+    }
+
     /**
      * <h3>getVelocity</h3>
      * Gets the velocity in degrees per second where 0 is the horizontal and positive is up.
@@ -71,6 +97,10 @@ public class PivotSubsystem extends SubsystemBase{
      */
     public double getVelocity() {
         return m_io.getVelocity();
+    }
+
+    public Measure<Velocity<Angle>> getVelocityMeasure() {
+        return Units.DegreesPerSecond.of(m_io.getVelocity());
     }
 
     /**
@@ -101,9 +131,11 @@ public class PivotSubsystem extends SubsystemBase{
     }
 
     public boolean atSetpoint() {
+        double velocity = getVelocity();
         double pos = getPosition();
         double target = getTarget();
-        return MathUtil.applyDeadband(target - pos, PIVOT_DEADBAND) == 0.0;
+        return MathUtil.isNear(target,pos,PIVOT_POSITION_DEADBAND) && MathUtil.isNear(0.0,velocity,PIVOT_VELOCITY_DEADBAND);
+
     }
 
     public Command newWaitUntilSetpointCommand(double seconds) {
