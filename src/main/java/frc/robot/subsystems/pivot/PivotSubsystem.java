@@ -175,7 +175,7 @@ public class PivotSubsystem extends SubsystemBase{
      /**
      * Instantaneously tells the subsystem to traverse to a certain point, given by a supplier.
      * @param setpoint The point for the subsystem to go to. This will be set on run, and will not be updated
-     * @return A command for the subsystem to go to and follow this setpoint
+     * @return A command for the subsystem to go to this setpoint
      */
     public Command newGotoSetpointCommand(DoubleSupplier setpoint) {
         return new InstantCommand(() -> setPosition(setpoint.getAsDouble()),this);
