@@ -1,11 +1,14 @@
 package frc.robot.subsystems.turret;
 
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.IOs.TalonPosIO;
@@ -129,5 +132,23 @@ public class TurretSubsystem extends SubsystemBase{
 
     public void setRefinedTarget(double position) {
         m_io.setRefinedTarget(position);
+    }
+
+    /**
+     * Instantaneously tells the subsystem to traverse to a certain point, given by a supplier.
+     * @param setpoint The point for the subsystem to go to. This will be set on run, and will not be updated
+     * @return A command for the subsystem to go to and follow this setpoint
+     */
+    public Command newGotoSetpointCommand(DoubleSupplier setpoint) {
+        return new InstantCommand(() -> setPosition(setpoint.getAsDouble()),this);
+    }
+
+    /**
+     * Makes the subsystem follow a setpoint given by a supplier until this command ends
+     * @param setpoint The point for the subsystem to follow. This can change.
+     * @return A command for the subsystem to go to and follow this setpoint
+     */
+    public Command newFollowSetpointCommand(DoubleSupplier setpoint) {
+        return new RunCommand(() -> setPosition(setpoint.getAsDouble()), this);
     }
 }

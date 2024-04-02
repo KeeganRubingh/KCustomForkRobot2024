@@ -4,12 +4,14 @@ import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import java.util.function.DoubleSupplier;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.IOs.TalonPosIO;
@@ -168,5 +170,23 @@ public class PivotSubsystem extends SubsystemBase{
 
     public Command newWaitUntilSetpointCommand(double timeout) {
         return new WaitCommand(timeout).until(() -> atSetpoint()); // Not dependent on subsystem because can run parralel with set position
+    }
+
+     /**
+     * Instantaneously tells the subsystem to traverse to a certain point, given by a supplier.
+     * @param setpoint The point for the subsystem to go to. This will be set on run, and will not be updated
+     * @return A command for the subsystem to go to and follow this setpoint
+     */
+    public Command newGotoSetpointCommand(DoubleSupplier setpoint) {
+        return new InstantCommand(() -> setPosition(setpoint.getAsDouble()),this);
+    }
+
+    /**
+     * Makes the subsystem follow a setpoint given by a supplier until this command ends
+     * @param setpoint The point for the subsystem to follow. This can change.
+     * @return A command for the subsystem to go to and follow this setpoint
+     */
+    public Command newFollowSetpointCommand(DoubleSupplier setpoint) {
+        return new RunCommand(() -> setPosition(setpoint.getAsDouble()), this);
     }
 }
